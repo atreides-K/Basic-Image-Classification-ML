@@ -1,5 +1,5 @@
 import torch
-from typing import Tuple
+from typing import Tuple, Optional
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 import numpy as np
@@ -15,8 +15,25 @@ def get_device() -> torch.device:
 def get_data(
         dataset_name: str,
         batch_size: int = 32,
-        transform: transforms = transforms.ToTensor(),
+        transform: Optional[transforms.Compose] = None, # fr backward compatibility
+        train_transform: Optional[transforms.Compose] = None, 
+        test_transform: Optional[transforms.Compose] = None   
 ) -> Tuple[DataLoader, DataLoader]:
+    
+    # backward compatibility logic if transform there what happen and not whathappens check 
+    # if train and test transform are there if not use default  transforms.ToTensor() like initially 👍
+    if transform is not None:
+        # If the 'transform' argument is provided, use it for BOTH train and test
+        final_train_transform = transform
+        final_test_transform = transform
+        # Optional: print("Using override 'transform' for both train and test.")
+    else:
+        # If 'transform' is NOT provided, use specific transforms or defaults
+        final_train_transform = train_transform if train_transform is not None else transforms.ToTensor()
+        final_test_transform = test_transform if test_transform is not None else transforms.ToTensor()
+
+
+    
     if dataset_name == 'mnist':
         train_data = datasets.MNIST(
             root='data', train=True, download=True, transform=transform)
@@ -28,10 +45,11 @@ def get_data(
         test_data = datasets.FashionMNIST(
             root='data', train=False, download=True, transform=transform)
     elif dataset_name == 'cifar10':
+        # only modified fr CIFAR10 atm its just final_train_transform and final_test_transform 
         train_data = datasets.CIFAR10(
-            root='data', train=True, download=True, transform=transform)
+            root='data', train=True, download=True, transform=final_train_transform)
         test_data = datasets.CIFAR10(
-            root='data', train=False, download=True, transform=transform)
+            root='data', train=False, download=True, transform=final_test_transform)
     else:
         raise ValueError('Dataset not supported')
 

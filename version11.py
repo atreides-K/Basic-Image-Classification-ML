@@ -40,7 +40,7 @@ class Net(nn.Module):
         x = self.drop(x)
         x = torch.relu(self.fc1(x))
         # Ensure output matches loss function (NLLLoss needs log-probabilities)
-        x = torch.log_softmax(self.fc2(x), dim=1)
+        x = self.fc2(x)
         return x
 
 # --- Main execution function for the experiment ---
@@ -96,6 +96,7 @@ def main() -> None:
           optimizer=optimizer,
           epochs=config["epochs"],
           scheduler=scheduler,
+          loss_type=config["loss_type"], # Pass the loss type
           test_loader=test_loader) # Pass scheduler and optional test_loader
 
 

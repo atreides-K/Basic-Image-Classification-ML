@@ -29,24 +29,32 @@ def run_resnet_experiment(n_value: int, depth: int):
         "milestones": [80, 120], # For 160 epochs (50%, 75%)
         "gamma": 0.1,
         "loss_type": "cross_entropy", # ResNet model outputs logits
-        "save_name": f'resnetv1_2_5e4_{depth}.pth' # Use f-string for dynamic naming
+        "save_name": f'resnet_og_v2_5e4_{depth}.pth' # Use f-string for dynamic naming
     }
     print(f"\n--- Running ResNet-{depth} (n={n_value}) Experiment ---")
     print("Config:")
     print(config)
     
-    transform = transforms.Compose([
+     # Data Augmentation from the techxzen repo👍
+    test_transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
     ])
-
-       # Use your get_data function
+    train_transform = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+    ])
+   
+    # Use your get_data function
     print("Loading data using get_data...")
+
     train_loader, test_loader = get_data(
-        dataset_name='cifar10',
-        batch_size=config["batch_size"],
-        transform=transform
-    )
+    dataset_name='cifar10',
+    batch_size=config["batch_size"],
+    train_transform=train_transform, 
+    test_transform=test_transform  )
     print("Data loaded.")
 
     # --- Create the ResNet Model ---
@@ -101,8 +109,8 @@ def run_resnet_experiment(n_value: int, depth: int):
 
 if __name__ == '__main__':
     # --- Run experiments for required depths ---
-    run_resnet_experiment(n_value=3, depth=20)
-    # run_resnet_experiment(n_value=9, depth=56)
+    # run_resnet_experiment(n_value=3, depth=20)
+    run_resnet_experiment(n_value=9, depth=56)
     # run_resnet_experiment(n_value=18, depth=110)
 
     print("\nAll ResNet experiments finished.")

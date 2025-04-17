@@ -1,4 +1,9 @@
 
+# shivam
+ResNet_OG_v1_Aug.py
+ResNet_OG_v2_Aug.py
+ResNet_OG_v3_Aug.py
+
 # Basic Image Classification
 
 PyTorch code for image classification using CNNs, along with some ablation experiments to improve learning without over-fitting
