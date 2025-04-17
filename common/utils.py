@@ -2,7 +2,7 @@ import torch
 from typing import Tuple
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
-
+import numpy as np
 
 def get_device() -> torch.device:
     if torch.cuda.is_available():
@@ -44,3 +44,13 @@ def get_data(
         test_data, batch_size=batch_size, shuffle=False, pin_memory=True)
 
     return train_loader, test_loader
+
+def save_training_plot(name, tplt):
+    try:
+        # Convert lists to numpy arrays before saving
+        tplot_np = {key: np.array(value) for key, value in tplt.items()}
+        
+        np.savez(name, **tplot_np)
+        print("History saved using NumPy.")
+    except Exception as e:
+        print(f"Error saving history with NumPy: {e}")

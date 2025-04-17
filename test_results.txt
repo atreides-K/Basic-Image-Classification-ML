@@ -1,0 +1,38 @@
+Base
+Test Loss: 0.8351 | Test Acc: 0.7975
+
+e 0.1
+Test Loss: 0.9526 | Test Acc: 0.7933
+
+e 0.2{'lr': 0.001, 'epochs': 50, 'batch_size': 64, 'optimizer': 'Adam', 'scheduler': 'StepLR', 'step_size': 20, 'gamma': 0.1, 'save_name': 'base_cnn_exp0.2_adam_lr001_e50_stepLR.pth'}
+Final Test Loss: 0.9880 | Final Test Acc: 0.8241
+
+e 0.3{'lr': 0.0005, 'epochs': 50, 'batch_size': 64, 'optimizer': 'Adam', 'scheduler': 'StepLR', 'step_size': 20, 'gamma': 0.1, 'save_name': 'base_cnn_exp0.3_adam_lr0005_e50_stepLR.pth'}
+Final Test Loss: 0.9801 | Final Test Acc: 0.8218
+
+Saving model to base_cnn_exp0.4_adam_lr002_e50_stepLR.pth
+Final Test Loss: 1.0159 | Final Test Acc: 0.8238
+
+Final Test Loss: 0.8417 | Final Test Acc: 0.8289
+Saving model to base_cnn_exp0.5_sgd_lr01_e75_stepLR.pth...
+
+decoupled lossfunctions as params in the code 
+Final Test Loss: 0.9951 | Final Test Acc: 0.8303
+Saving model to base_cnn_exp0.6_adam_lr001_e50_stepLR_CELoss.pth...
+
+added optional criterion as it was causing trouble when not passed which shows error full at the
+
+Final Evaluation on Test Set:
+Testing: 100%|█████████████████████████████████████████████████████████████████████████████████████| 157/157 [00:07<00:00, 22.33it/s, loss=0.8473]
+Final Test Loss: 0.8012 | Final Test Acc: 0.8292
+Saving model to base_cnn_exp0.7_sgd_lr001_e120_stepLR.pth...
+
+Final Evaluation on Test Set:
+Testing: 100%|█████████████████████████████████████████████████████████████████████████████████████| 157/157 [00:08<00:00, 17.53it/s, loss=1.2609]
+Final Test Loss: 0.9582 | Final Test Acc: 0.8488
+Saving model to base_cnn_exp0.8_sgd_lr01_e120_multystepLR_NLL.pth...
+
+Testing: 100%|█████████████████████████████████████████████████████████████████████████████████████| 157/157 [00:05<00:00, 29.98it/s, loss=1.8082]
+Final Test Loss: 1.0071 | Final Test Acc: 0.8441
+Saving model to base_cnn_exp0.9_sgd_lr01_e120_multystepLR_CEloss.pth...
+Model saved.

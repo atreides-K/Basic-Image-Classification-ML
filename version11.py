@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 # --- Import the specific scheduler you want ---
-from torch.optim.lr_scheduler import StepLR
+from torch.optim.lr_scheduler import StepLR, MultiStepLR
 from torchvision import transforms
 from common.utils import get_data, get_device # get_device might not be needed directly here
 # --- Import the MODIFIED train function and evaluate ---
@@ -47,14 +47,15 @@ class Net(nn.Module):
 def main() -> None:
     # --- Experiment Configuration ---
     config = {
-        "lr": 0.001,
-        "epochs": 50,
+        "lr": 0.1,
+        "epochs": 150,
         "batch_size": 64,
-        "optimizer": "Adam",
-        "scheduler": "StepLR",
+        "optimizer": "SGD",
+        "scheduler": "MultiStepLR",
         "step_size": 20,
         "gamma": 0.1,
-        "save_name": 'base_cnn_exp0.2_adam_lr001_e50_stepLR.pth' # Your descriptive name
+        "loss_type": "cross_entropy", # Specify loss type here
+        "save_name": 'base_cnn_exp0.10_sgd_lr01_e120_multystepLR_CEloss.pth' # Your descriptive name
     }
     print("Running Experiment with Config:")
     print(config)
@@ -84,7 +85,7 @@ def main() -> None:
     if config["scheduler"] == "StepLR":
         scheduler = StepLR(optimizer, step_size=config["step_size"], gamma=config["gamma"])
     elif config["scheduler"] == "MultiStepLR":
-         # scheduler = MultiStepLR(optimizer, milestones=[m1, m2], gamma=config["gamma"]) # Define milestones if using
+         scheduler = MultiStepLR(optimizer, milestones=[75, 113], gamma=config["gamma"]) # Define milestones if using
          pass # Add other schedulers if needed
     # If config["scheduler"] is None or not matched, scheduler remains None
 
@@ -97,9 +98,15 @@ def main() -> None:
           scheduler=scheduler,
           test_loader=test_loader) # Pass scheduler and optional test_loader
 
+
+
+    if config["loss_type"].lower() in ['cross_entropy', 'ce']:
+        final_criterion = nn.CrossEntropyLoss()
+    else:
+        final_criterion = nn.NLLLoss()
     # --- Final Evaluation ---
     print("\nFinal Evaluation on Test Set:")
-    final_test_loss, final_test_acc = evaluate(model, test_loader)
+    final_test_loss, final_test_acc = evaluate(model, test_loader,final_criterion)
     print(f"Final Test Loss: {final_test_loss:.4f} | Final Test Acc: {final_test_acc:.4f}")
 
     # --- Save the final model ---

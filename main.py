@@ -7,6 +7,7 @@ from version6 import main as main6
 from version7 import main as main7
 from version8 import main as main8
 from version9 import main as main9
+from version11 import main as main11
 
 
 if __name__ == '__main__':
@@ -34,3 +35,5 @@ if __name__ == '__main__':
         main8()
     if version == 9:
         main9()
+    if version == 11:
+        main11()

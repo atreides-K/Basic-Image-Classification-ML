@@ -18,6 +18,7 @@ class Net(nn.Module):
         self.conv4 = nn.Conv2d(128, 256, 3, 1, padding="same")
         self.bn4 = nn.BatchNorm2d(256)
         self.fc1 = nn.Linear(1024, 256)
+        self.drop = nn.Dropout(0.5)
         self.fc2 = nn.Linear(256, num_classes)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -30,6 +31,7 @@ class Net(nn.Module):
         x = torch.relu(F.max_pool2d(self.conv4(x), 2))  # 2 x 2 x 256
         x = self.bn4(x)
         x = x.view(x.size(0), -1)
+        x = self.drop(x)
         x = torch.relu(self.fc1(x))
         x = torch.log_softmax(self.fc2(x), dim=1)
         return x
@@ -47,7 +49,13 @@ def main() -> None:
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     # Train the model
-    train(model, train_loader, optimizer, epochs=25)
+    train(model, train_loader, optimizer, epochs=44)
+
+    # SAVE 
+    save_path = 'base_cnn_exp0.1_adam_lr001_e44.pth'
+    torch.save(model.state_dict(), save_path)
+    print(f"Model state dictionary saved to: {save_path}")
+    
 
     # Evaluate the model
     test_loss, test_acc = evaluate(model, test_loader)

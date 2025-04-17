@@ -51,6 +51,12 @@ def main() -> None:
     # Train the model
     train(model, train_loader, optimizer, epochs=25)
 
+    # SAVE 
+    save_path = 'base_cnn_v9_initial.pth'
+    torch.save(model.state_dict(), save_path)
+    print(f"Model state dictionary saved to: {save_path}")
+    
+
     # Evaluate the model
     test_loss, test_acc = evaluate(model, test_loader)
     print(f"Test Loss: {test_loss:.4f} | Test Acc: {test_acc:.4f}")
