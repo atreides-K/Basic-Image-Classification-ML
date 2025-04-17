@@ -1,8 +1,18 @@
 
-# shivam
+# vanilla(just normalization)
+ResNet_v1_1.py  ( "weight_decay": 1e-4)
+ResNet_v1_2.py  ( "weight_decay": 5e-4) rest uses this
+ResNet_v2.py
+ResNet_v3.py
+# tsx specs
 ResNet_OG_v1_Aug.py
 ResNet_OG_v2_Aug.py
 ResNet_OG_v3_Aug.py
+
+# kuangliu pytorch-cifar specs 
+ResNet_Neo_v1_Aug.py
+ResNet_Neo_v2_Aug.py
+ResNet_Neo_v3_Aug.py
 
 # Basic Image Classification
 
