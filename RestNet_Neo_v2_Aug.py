@@ -29,7 +29,7 @@ def run_resnet_experiment(n_value: int, depth: int):
         "milestones": [80, 120], # For 160 epochs (50%, 75%)
         "gamma": 0.1,
         "loss_type": "cross_entropy", # ResNet model outputs logits
-        "save_name": f'resnet_og_v2_5e4_{depth}.pth' # Use f-string for dynamic naming
+        "save_name": f'resnet_neo_v2_5e4_{depth}.pth' # Use f-string for dynamic naming
     }
     print(f"\n--- Running ResNet-{depth} (n={n_value}) Experiment ---")
     print("Config:")
