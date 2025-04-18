@@ -376,13 +376,17 @@ def visualize_model(model_config):
 
     # --- 9. Generate Plots ---
     X, Y = np.meshgrid(alpha_coords, beta_coords)
-
+    # for the correct color gradient in 3d issue
+    min_loss = np.min(loss_surface) 
+    max_loss = np.max(loss_surface) 
     # 3D Surface Plot
     print("Generating 3D Plot...")
     fig3d = plt.figure(figsize=(10, 8))
     ax3d = fig3d.add_subplot(111, projection='3d')
+
+
     # Use log loss for better visualization if values vary a lot, handle potential zeros/negatives
-    surf = ax3d.plot_surface(X, Y, np.log(loss_surface+1e-6).T, cmap='viridis', edgecolor='none') # Log scale, transpose Z
+    surf = ax3d.plot_surface(X, Y, np.log(loss_surface+1e-6).T, cmap='viridis', edgecolor='none', vmin=min_loss, vmax=max_loss) # Log scale, transpose Z
     ax3d.set_xlabel('Alpha')
     ax3d.set_ylabel('Beta')
     ax3d.set_zlabel('Log Loss')
