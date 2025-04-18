@@ -70,13 +70,13 @@ models_to_visualize = [
         "n_value": 18,
         "loss_type": "cross_entropy"
     },
-    # {
-    #     "name": "PlainNet-20",
-    #     "ckpt_path": os.path.join("plainnet_neo_v1_5e4_20.pth"), # Use your actual filename
-    #     "arch_type": "plainnet",
-    #     "n_value": 3,
-    #     "loss_type": "cross_entropy"
-    # },
+    {
+        "name": "PlainNet-20",
+        "ckpt_path": os.path.join("plainnet_neo_v1_5e4_20.pth"), # Use your actual filename
+        "arch_type": "plainnet",
+        "n_value": 3,
+        "loss_type": "cross_entropy"
+    },
     {
         "name": "PlainNet-56",
         "ckpt_path": os.path.join("plainnet_neo_v2_5e4_56.pth"), # Use your actual filename
