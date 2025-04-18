@@ -1,5 +1,9 @@
 Base
 Test Loss: 0.8351 | Test Acc: 0.7975
+Training complete!
+Model state dictionary saved to: base_cnn_v9_initial.pth
+Testing: 100%|███████████████████████████████████████████████| 157/157 [00:04<00:00, 34.08it/s, loss=0.7820]
+Test Loss: 0.8728 | Test Acc: 0.7941
 
 e 0.1
 Test Loss: 0.9526 | Test Acc: 0.7933
@@ -36,10 +40,46 @@ Testing: 100%|██████████████████████
 Final Test Loss: 1.0071 | Final Test Acc: 0.8441
 Saving model to base_cnn_exp0.9_sgd_lr01_e120_multystepLR_CEloss.pth...
 Model saved.
+Final Evaluation on Test Set:
+Testing: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [00:09<00:00, 16.19it/s, loss=1.6636]
+Final Test Loss: 1.0389 | Final Test Acc: 0.8367
+Saving model to base_cnn_exp0.10_sgd_lr01_e120_multystepLR_CEloss.pth...
+Model saved. this fixed exp09
 
+
+
+RESNETS 
+
+vanile just normailization 
 Final Evaluation for ResNet-20:
 Testing: 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 79/79 [00:07<00:00, 10.63it/s, loss=0.4663]
   Final Test Loss: 0.4148 | Final Test Acc: 0.8781
 Saving model to resnetv1_2_5e4_20.pth...
 ResNet-20 model saved.
 History saved using NumPy.
+
+Final Evaluation for ResNet-56:
+Testing: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 79/79 [00:13<00:00,  6.03it/s, loss=0.1808]
+  Final Test Loss: 0.4278 | Final Test Acc: 0.8896
+Saving model to resnetv2_5e4_56.pth...
+ResNet-56 model saved.
+
+OG modified the train util to handle separete train and test load transform
+techxzen augmentations 
+
+Neo kuangliu pytorch-cifar
+Testing: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 79/79 [00:04<00:00, 15.82it/s, loss=0.7735]
+  Final Test Loss: 0.2705 | Final Test Acc: 0.9344
+Saving model to resnet_neo_v2_5e4_56.pth...
+ResNet-56 model saved.
+
+Final Evaluation for ResNet-110:
+Testing: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 79/79 [00:06<00:00, 12.81it/s, loss=0.6459]
+  Final Test Loss: 0.2936 | Final Test Acc: 0.9362
+Saving model to resnet_neo_v3_5e4_110.pth...
+ResNet-110 model saved.
+
+
+Final Evaluation for plainNet-56:
+Testing: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 79/79 [00:05<00:00, 13.41it/s, loss=0.8131]
+  Final Test Loss: 0.4567 | Final Test Acc: 0.8602

@@ -55,7 +55,7 @@ def main() -> None:
         "step_size": 20,
         "gamma": 0.1,
         "loss_type": "cross_entropy", # Specify loss type here
-        "save_name": 'base_cnn_exp0.10_sgd_lr01_e120_multystepLR_CEloss.pth' # Your descriptive name
+        "save_name": 'base_cnn_exp0.9_sgd_lr01_e120_multystepLR_CEloss.pth' # Your descriptive name
     }
     print("Running Experiment with Config:")
     print(config)
