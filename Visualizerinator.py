@@ -1,4 +1,4 @@
-# visualize_landscape.py
+
 
 import argparse
 import sys
@@ -31,7 +31,7 @@ HISTORY_DIR = "history" # Where history .npz files are saved
 MODEL_DIR = "models" # Where ResNet.py etc. are
 
 # --- Visualization Parameters ---
-RESOLUTION = 50 # Grid resolution (e.g., 25x25 points). Higher = slower but smoother plots. Start low (e.g., 10 or 15) for testing.
+RESOLUTION = 25 # Grid resolution (e.g., 25x25 points). Higher = slower but smoother plots. Start low (e.g., 10 or 15) for testing.
 ALPHA_RANGE = (-1.0, 1.0) # Range for alpha direction
 BETA_RANGE = (-1.0, 1.0) # Range for beta direction
 LOADER_BATCH_SIZE = 256 # Batch size for calculating loss during visualization (can be different from training)
