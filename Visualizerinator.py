@@ -1,5 +1,7 @@
 # visualize_landscape.py
 
+import argparse
+import sys
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -220,7 +222,7 @@ def get_loss(model, criterion, loader, device, subset_size=None):
     return total_loss/total_samples
 
 # --- Main Visualization Logic ---
-def visualize_all_models():
+def visualize_model(model_config):
     # Ensure plot directory exists
     os.makedirs(PLOT_DIR,exist_ok=True)
 
@@ -240,184 +242,184 @@ def visualize_all_models():
     print("Evaluation data loaded.")
 
 
-    for model_config in models_to_visualize:
-        model_name=model_config["name"]
-        ckpt_path=model_config["ckpt_path"]
-        arch_type=model_config["arch_type"]
-        n_value=model_config["n_value"]
-        loss_type=model_config["loss_type"]
 
-        print(f"\n\nProcessing hte Model: {model_name} ")
-        print(f"Checkpoint:{ckpt_path}")
+    model_name=model_config["name"]
+    ckpt_path=model_config["ckpt_path"]
+    arch_type=model_config["arch_type"]
+    n_value=model_config["n_value"]
+    loss_type=model_config["loss_type"]
 
-        if not os.path.exists(ckpt_path):
-            print(f"!!! Oh no Checkpoint file not found: {ckpt_path}. Skipping model.")
-            continue
-        
-        # was running into issues with the plot error when os not exist 
-        # so wanna rerun and create plots of already created ones
-        plot3d_save_path = os.path.join(PLOT_DIR, f"{model_name}_3D_landscape_{RESOLUTION}x{RESOLUTION}.png")
-        plot2d_save_path = os.path.join(PLOT_DIR, f"{model_name}_2D_contour_{RESOLUTION}x{RESOLUTION}.png")
-        if os.path.exists(plot3d_save_path) and os.path.exists(plot2d_save_path):
-            print(f"Plots already exist for {model_name} at {RESOLUTION}x{RESOLUTION} resolution. Skipping.")
-            continue
+    print(f"\n\nProcessing hte Model: {model_name} ")
+    print(f"Checkpoint:{ckpt_path}")
+
+    if not os.path.exists(ckpt_path):
+        print(f"!!! Oh no Checkpoint file not found: {ckpt_path}. Skipping model.")
+        return
+    
+    # was running into issues with the plot error when os not exist 
+    # so wanna rerun and create plots of already created ones
+    plot3d_save_path = os.path.join(PLOT_DIR, f"{model_name}_3D_landscape_{RESOLUTION}x{RESOLUTION}.png")
+    plot2d_save_path = os.path.join(PLOT_DIR, f"{model_name}_2D_contour_{RESOLUTION}x{RESOLUTION}.png")
+    if os.path.exists(plot3d_save_path) and os.path.exists(plot2d_save_path):
+        print(f"Plots already exist for {model_name} at {RESOLUTION}x{RESOLUTION} resolution. Skipping.")
+        return
 
 
-        # loads the model architecture based on the type
-        print("Instantiating the model ")
-        if arch_type=="net":
-            model=Net(num_classes=10)
-            # Ensure model forward pass matches loss_type
-            # This assumes you saved the *correct* model variant for base_cnn_best.pth
-        elif arch_type=="resnet":
-            model=ResNet(n=n_value)
-        elif arch_type=="plainnet":
-            model=PlainNet(n=n_value)
+    # loads the model architecture based on the type
+    print("Instantiating the model ")
+    if arch_type=="net":
+        model=Net(num_classes=10)
+        # Ensure model forward pass matches loss_type
+        # This assumes you saved the *correct* model variant for base_cnn_best.pth
+    elif arch_type=="resnet":
+        model=ResNet(n=n_value)
+    elif arch_type=="plainnet":
+        model=PlainNet(n=n_value)
+    else:
+        print(f"!!! Unknown architecture type '{arch_type}'. Skipping.")
+        return
+
+
+    print("Loading trained weights...")
+    try:
+        # Adjust loading based on how checkpoints were saved
+        # If saved directly using torch.save(model.state_dict(), ...):
+        state_dict = torch.load(ckpt_path, map_location=torch.device('cpu')) # Load to CPU first
+        # Handle potential keys like 'state' if saved from techxzen repo run.py
+        if 'state' in state_dict and isinstance(state_dict['state'], dict):
+                model.load_state_dict(state_dict['state'])
+                print(" Loaded  state_dict from 'state' key.")
         else:
-            print(f"!!! Unknown architecture type '{arch_type}'. Skipping.")
-            continue
+                model.load_state_dict(state_dict)
+                print(" Loaded  state_dict directly.")
+
+        model.to(DEVICE) # Move model to GPU *after* loading state_dict
+    except Exception as e:
+        print(f"!!! Error loading checkpoint {ckpt_path}: {e}. Skipping.")
+        return
+
+    # --- 3. Get Trained Parameters (theta_star) ---
+    theta_star = get_model_parameters(model)
+    # print(" Theta_star shapes:", [p.shape for p in theta_star])
+
+    # --- 4. Get Random Directions (delta, eta) ---
+    delta,eta=get_random_directions(theta_star)
+    # print(" Delta shapes:", [p.shape for p in delta])
+    # print(" Eta shapes:", [p.shape for p in eta])
+
+    # --- 5. Normalize Directions Filter-wise ---
+    delta_norm = normalize_direction_filterwise(delta, theta_star)
+    eta_norm = normalize_direction_filterwise(eta, theta_star)
+
+    # Optional Sanity Check: Calculate norms before/after (can be slow)
+    # norm_delta_before = sum([torch.linalg.norm(p).item()**2 for p in delta])**0.5
+    # norm_eta_before = sum([torch.linalg.norm(p).item()**2 for p in eta])**0.5
+    # norm_delta_after = sum([torch.linalg.norm(p).item()**2 for p in delta_norm])**0.5
+    # norm_eta_after = sum([torch.linalg.norm(p).item()**2 for p in eta_norm])**0.5
+    # norm_theta_star = sum([torch.linalg.norm(p).item()**2 for p in theta_star])**0.5
+    # print(f" Norms: ||theta*||={norm_theta_star:.2f} ||delta||={norm_delta_before:.2f} -> {norm_delta_after:.2f} ||eta||={norm_eta_before:.2f} -> {norm_eta_after:.2f}")
 
 
-        print("Loading trained weights...")
-        try:
-            # Adjust loading based on how checkpoints were saved
-            # If saved directly using torch.save(model.state_dict(), ...):
-            state_dict = torch.load(ckpt_path, map_location=torch.device('cpu')) # Load to CPU first
-            # Handle potential keys like 'state' if saved from techxzen repo run.py
-            if 'state' in state_dict and isinstance(state_dict['state'], dict):
-                 model.load_state_dict(state_dict['state'])
-                 print(" Loaded  state_dict from 'state' key.")
-            else:
-                 model.load_state_dict(state_dict)
-                 print(" Loaded  state_dict directly.")
+    # --- 6. Define Loss Function ---
+    if loss_type.lower() == 'nll':
+        criterion = nn.NLLLoss()
+        print("Using NLLLoss for evaluation (model should output LogSoftmax).")
+    elif loss_type.lower() in ['cross_entropy', 'ce']:
+        criterion = nn.CrossEntropyLoss()
+        print("Using CrossEntropyLoss for evaluation (model should output logits).")
+    else:
+        print(f"!!! Invalid loss_type '{loss_type}' specified. Skipping.")
+        return
 
-            model.to(DEVICE) # Move model to GPU *after* loading state_dict
-        except Exception as e:
-            print(f"!!! Error loading checkpoint {ckpt_path}: {e}. Skipping.")
-            continue
+    # --- 7. Calculate Loss over Grid ---
+    alpha_coords = np.linspace(ALPHA_RANGE[0], ALPHA_RANGE[1], RESOLUTION)
+    beta_coords = np.linspace(BETA_RANGE[0], BETA_RANGE[1], RESOLUTION)
+    loss_surface = np.zeros((RESOLUTION, RESOLUTION))
 
-        # --- 3. Get Trained Parameters (theta_star) ---
-        theta_star = get_model_parameters(model)
-        # print(" Theta_star shapes:", [p.shape for p in theta_star])
+    # Create a temporary model copy ONCE for efficiency
+    # We will load parameters into this copy repeatedly
+    model_copy = copy.deepcopy(model)
+    model_copy.to(DEVICE)
 
-        # --- 4. Get Random Directions (delta, eta) ---
-        delta,eta=get_random_directions(theta_star)
-        # print(" Delta shapes:", [p.shape for p in delta])
-        # print(" Eta shapes:", [p.shape for p in eta])
+    print(f"Calculating loss on a {RESOLUTION}x{RESOLUTION} grid...")
+    total_points = RESOLUTION * RESOLUTION
+    processed_points = 0
 
-        # --- 5. Normalize Directions Filter-wise ---
-        delta_norm = normalize_direction_filterwise(delta, theta_star)
-        eta_norm = normalize_direction_filterwise(eta, theta_star)
+    for i, alpha in enumerate(alpha_coords):
+        for j, beta in enumerate(beta_coords):
+            # Calculate temporary parameters
+            theta_temp = []
+            # Use .data to avoid graph tracking during calculation
+            # Also do calculations on CPU potentially if memory is tight, then move tensor
+            for ws, d_n, e_n in zip(theta_star, delta_norm, eta_norm):
+                # Ensure alpha and beta are treated as scalars
+                term = ws.data + float(alpha) * d_n.data + float(beta) * e_n.data
+                theta_temp.append(term.to(DEVICE)) # Move to device
 
-        # Optional Sanity Check: Calculate norms before/after (can be slow)
-        # norm_delta_before = sum([torch.linalg.norm(p).item()**2 for p in delta])**0.5
-        # norm_eta_before = sum([torch.linalg.norm(p).item()**2 for p in eta])**0.5
-        # norm_delta_after = sum([torch.linalg.norm(p).item()**2 for p in delta_norm])**0.5
-        # norm_eta_after = sum([torch.linalg.norm(p).item()**2 for p in eta_norm])**0.5
-        # norm_theta_star = sum([torch.linalg.norm(p).item()**2 for p in theta_star])**0.5
-        # print(f" Norms: ||theta*||={norm_theta_star:.2f} ||delta||={norm_delta_before:.2f} -> {norm_delta_after:.2f} ||eta||={norm_eta_before:.2f} -> {norm_eta_after:.2f}")
+            # Load temporary parameters into the model copy
+            set_model_parameters(model_copy, theta_temp)
 
+            # Calculate loss
+            current_loss = get_loss(model_copy, criterion, eval_loader, DEVICE, subset_size=SUBSET_SIZE)
+            loss_surface[i, j] = current_loss
 
-        # --- 6. Define Loss Function ---
-        if loss_type.lower() == 'nll':
-            criterion = nn.NLLLoss()
-            print("Using NLLLoss for evaluation (model should output LogSoftmax).")
-        elif loss_type.lower() in ['cross_entropy', 'ce']:
-            criterion = nn.CrossEntropyLoss()
-            print("Using CrossEntropyLoss for evaluation (model should output logits).")
-        else:
-            print(f"!!! Invalid loss_type '{loss_type}' specified. Skipping.")
-            continue
+            processed_points += 1
+            if processed_points % 10 == 0 or processed_points == total_points: # Print progress
+                print(f"  Processed grid point {processed_points}/{total_points}...", end='\r')
 
-        # --- 7. Calculate Loss over Grid ---
-        alpha_coords = np.linspace(ALPHA_RANGE[0], ALPHA_RANGE[1], RESOLUTION)
-        beta_coords = np.linspace(BETA_RANGE[0], BETA_RANGE[1], RESOLUTION)
-        loss_surface = np.zeros((RESOLUTION, RESOLUTION))
+    print("\nLoss calculation complete.")
 
-        # Create a temporary model copy ONCE for efficiency
-        # We will load parameters into this copy repeatedly
-        model_copy = copy.deepcopy(model)
-        model_copy.to(DEVICE)
+    # --- 8. Save Loss Surface Data ---
+    surface_save_path = os.path.join(PLOT_DIR, f"{model_name}_loss_surface_{RESOLUTION}x{RESOLUTION}.npz")
+    np.savez(surface_save_path, alpha=alpha_coords, beta=beta_coords, losses=loss_surface)
+    print(f"Loss surface data saved to {surface_save_path}")
 
-        print(f"Calculating loss on a {RESOLUTION}x{RESOLUTION} grid...")
-        total_points = RESOLUTION * RESOLUTION
-        processed_points = 0
+    # --- 9. Generate Plots ---
+    X, Y = np.meshgrid(alpha_coords, beta_coords)
 
-        for i, alpha in enumerate(alpha_coords):
-            for j, beta in enumerate(beta_coords):
-                # Calculate temporary parameters
-                theta_temp = []
-                # Use .data to avoid graph tracking during calculation
-                # Also do calculations on CPU potentially if memory is tight, then move tensor
-                for ws, d_n, e_n in zip(theta_star, delta_norm, eta_norm):
-                    # Ensure alpha and beta are treated as scalars
-                    term = ws.data + float(alpha) * d_n.data + float(beta) * e_n.data
-                    theta_temp.append(term.to(DEVICE)) # Move to device
+    # 3D Surface Plot
+    print("Generating 3D Plot...")
+    fig3d = plt.figure(figsize=(10, 8))
+    ax3d = fig3d.add_subplot(111, projection='3d')
+    # Use log loss for better visualization if values vary a lot, handle potential zeros/negatives
+    surf = ax3d.plot_surface(X, Y, np.log(loss_surface+1e-6).T, cmap='viridis', edgecolor='none') # Log scale, transpose Z
+    ax3d.set_xlabel('Alpha')
+    ax3d.set_ylabel('Beta')
+    ax3d.set_zlabel('Log Loss')
+    ax3d.set_title(f"Loss Landscape: {model_name} (Log Scale)")
+    fig3d.colorbar(surf, shrink=0.5, aspect=5)
+    plot3d_save_path = os.path.join(PLOT_DIR, f"{model_name}_3D_landscape_{RESOLUTION}x{RESOLUTION}.png")
+    plt.savefig(plot3d_save_path)
+    plt.close(fig3d)
+    print(f"3D Plot saved to {plot3d_save_path}")
 
-                # Load temporary parameters into the model copy
-                set_model_parameters(model_copy, theta_temp)
+    # 2D Contour Plot
+    print("Generating 2D Contour Plot...")
+    fig2d, ax2d = plt.subplots(figsize=(8, 7))
+    # Adjust levels for contour plot - maybe log scale helps here too
+    # Often need to experiment with contour levels
+    # levels = np.linspace(np.min(loss_surface), np.min(loss_surface) + 1.0, 15) # Example levels: min loss to min loss + 1
+    # Or logarithmic levels: levels = np.logspace(np.log10(np.min(loss_surface)+1e-6), np.log10(np.max(loss_surface)), 15)
+    # CS=ax2d.contourf(X, Y, loss_surface.T, levels=levels, cmap='viridis', extend='max') # Filled contour, transpose Z
+    n_levels=20
+    # CS=ax2d.contour(X, Y, loss_surface.T, levels=n_levels, cmap='viridis', linewidths=0.5) # Add contour lines
+    CS=ax2d.contour(X, Y, np.log(loss_surface+1e-6).T, levels=n_levels, cmap='viridis', linewidths=0.5) # Add contour lines
+    ax2d.set_xlabel('Alpha')
+    ax2d.set_ylabel('Beta')
+    ax2d.set_title(f"Loss Contours: {model_name}")
+    ax2d.clabel(CS, inline=True, fontsize=8, fmt='%.2f')
+    fig2d.colorbar(CS)
+    plot2d_save_path = os.path.join(PLOT_DIR, f"{model_name}_2D_contour_{RESOLUTION}x{RESOLUTION}.png")
+    plt.savefig(plot2d_save_path)
+    plt.close(fig2d)
+    print(f"2D Plot saved to {plot2d_save_path}")
 
-                # Calculate loss
-                current_loss = get_loss(model_copy, criterion, eval_loader, DEVICE, subset_size=SUBSET_SIZE)
-                loss_surface[i, j] = current_loss
+    # Clear memory explicitly (might help on some systems)
+    del model, model_copy, theta_star, delta, eta, delta_norm, eta_norm, theta_temp, loss_surface
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
 
-                processed_points += 1
-                if processed_points % 10 == 0 or processed_points == total_points: # Print progress
-                    print(f"  Processed grid point {processed_points}/{total_points}...", end='\r')
-
-        print("\nLoss calculation complete.")
-
-        # --- 8. Save Loss Surface Data ---
-        surface_save_path = os.path.join(PLOT_DIR, f"{model_name}_loss_surface_{RESOLUTION}x{RESOLUTION}.npz")
-        np.savez(surface_save_path, alpha=alpha_coords, beta=beta_coords, losses=loss_surface)
-        print(f"Loss surface data saved to {surface_save_path}")
-
-        # --- 9. Generate Plots ---
-        X, Y = np.meshgrid(alpha_coords, beta_coords)
-
-        # 3D Surface Plot
-        print("Generating 3D Plot...")
-        fig3d = plt.figure(figsize=(10, 8))
-        ax3d = fig3d.add_subplot(111, projection='3d')
-        # Use log loss for better visualization if values vary a lot, handle potential zeros/negatives
-        surf = ax3d.plot_surface(X, Y, np.log(loss_surface+1e-6).T, cmap='viridis', edgecolor='none') # Log scale, transpose Z
-        ax3d.set_xlabel('Alpha')
-        ax3d.set_ylabel('Beta')
-        ax3d.set_zlabel('Log Loss')
-        ax3d.set_title(f"Loss Landscape: {model_name} (Log Scale)")
-        fig3d.colorbar(surf, shrink=0.5, aspect=5)
-        plot3d_save_path = os.path.join(PLOT_DIR, f"{model_name}_3D_landscape_{RESOLUTION}x{RESOLUTION}.png")
-        plt.savefig(plot3d_save_path)
-        plt.close(fig3d)
-        print(f"3D Plot saved to {plot3d_save_path}")
-
-        # 2D Contour Plot
-        print("Generating 2D Contour Plot...")
-        fig2d, ax2d = plt.subplots(figsize=(8, 7))
-        # Adjust levels for contour plot - maybe log scale helps here too
-        # Often need to experiment with contour levels
-        # levels = np.linspace(np.min(loss_surface), np.min(loss_surface) + 1.0, 15) # Example levels: min loss to min loss + 1
-        # Or logarithmic levels: levels = np.logspace(np.log10(np.min(loss_surface)+1e-6), np.log10(np.max(loss_surface)), 15)
-        # CS=ax2d.contourf(X, Y, loss_surface.T, levels=levels, cmap='viridis', extend='max') # Filled contour, transpose Z
-        n_levels=20
-        # CS=ax2d.contour(X, Y, loss_surface.T, levels=n_levels, cmap='viridis', linewidths=0.5) # Add contour lines
-        CS=ax2d.contour(X, Y, np.log(loss_surface+1e-6).T, levels=n_levels, cmap='viridis', linewidths=0.5) # Add contour lines
-        ax2d.set_xlabel('Alpha')
-        ax2d.set_ylabel('Beta')
-        ax2d.set_title(f"Loss Contours: {model_name}")
-        ax2d.clabel(CS, inline=True, fontsize=8, fmt='%.2f')
-        fig2d.colorbar(CS)
-        plot2d_save_path = os.path.join(PLOT_DIR, f"{model_name}_2D_contour_{RESOLUTION}x{RESOLUTION}.png")
-        plt.savefig(plot2d_save_path)
-        plt.close(fig2d)
-        print(f"2D Plot saved to {plot2d_save_path}")
-
-        # Clear memory explicitly (might help on some systems)
-        del model, model_copy, theta_star, delta, eta, delta_norm, eta_norm, theta_temp, loss_surface
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-
-    print("\n\n=== All Model Visualizations Finished ===")
+    print("\n\nModel Visualizations Finito")
 
 
 
@@ -439,7 +441,27 @@ def pre_check():
     return True
 
 if __name__ == '__main__':
-    if not pre_check():
-        print("Pre-checks failed. Exiting.")
+    # if not pre_check():
+    #     print("Pre-checks failed. Exiting.")
+    #     exit(1)
+
+    parser = argparse.ArgumentParser(description="Visualize loss landscape for a specific model using its index.")
+    num_models = len(models_to_visualize)
+    parser.add_argument('--model_index', type=int, required=True,
+                        help=f'Index of the model to visualize (0 to {num_models-1}).')
+    # Removed resolution and subset_size args, use constants defined above
+
+    args = parser.parse_args()
+
+    # --- Validate Model Index ---
+    if not 0 <= args.model_index < num_models:
+        print(f"Error: Invalid model index {args.model_index}. Please provide an index between 0 and {num_models-1}.")
+        # Print available models and their indices
+        print("Available models:")
+        for idx, config in enumerate(models_to_visualize):
+            print(f"  Index {idx}: {config['name']}")
         exit(1)
-    visualize_all_models()
+
+    # --- Get the configuration for the requested model index ---
+    model_config = models_to_visualize[args.model_index]
+    visualize_model(model_config)
