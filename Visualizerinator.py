@@ -12,24 +12,24 @@ import os
 import copy # For deep copying models/parameters
 
 # --- Assume these utils are in common/ ---
-from common.utils import get_data, get_device, save_training_history # Reusing save history function
+from common.utils import get_data, get_device, save_training_plot # Reusing save history function
 from common.train_utils import evaluate # Need evaluate to calculate loss
 
 # --- Assume model definitions are importable ---
 # Make sure ResNet.py is in models/ and has the integer division fix
 from models import ResNet, PlainNet
 # Make sure you have a file (e.g., base_cnn_model.py) with your best Net class
-from base_cnn_model import Net # Or whatever you called the file/class
+from BaseCNN import Net # Or whatever you called the file/class
 
 # --- Configuration ---
 DEVICE = get_device()
-CHECKPOINT_DIR = "checkpoints"
+CHECKPOINT_DIR = ""
 PLOT_DIR = "plots"
 HISTORY_DIR = "history" # Where history .npz files are saved
 MODEL_DIR = "models" # Where ResNet.py etc. are
 
 # --- Visualization Parameters ---
-RESOLUTION = 25 # Grid resolution (e.g., 25x25 points). Higher = slower but smoother plots. Start low (e.g., 10 or 15) for testing.
+RESOLUTION = 10 # Grid resolution (e.g., 25x25 points). Higher = slower but smoother plots. Start low (e.g., 10 or 15) for testing.
 ALPHA_RANGE = (-1.0, 1.0) # Range for alpha direction
 BETA_RANGE = (-1.0, 1.0) # Range for beta direction
 LOADER_BATCH_SIZE = 256 # Batch size for calculating loss during visualization (can be different from training)
@@ -42,49 +42,49 @@ SUBSET_SIZE = None # Use None for full test set, or e.g., 1000 for a faster subs
 models_to_visualize = [
     {
         "name": "BaseCNN_Best",
-        "ckpt_path": os.path.join(CHECKPOINT_DIR, "base_cnn_best.pth"),
+        "ckpt_path": os.path.join("best.pth"),
         "arch_type": "net",
         "n_value": None, # Not applicable for Net
         "loss_type": "nll" # Or 'cross_entropy' if your best base CNN used that
     },
     {
         "name": "ResNet-20",
-        "ckpt_path": os.path.join(CHECKPOINT_DIR, "resnet_neo_v1_5e4_20.pth"), # Use your actual filename
+        "ckpt_path": os.path.join("resnet_neo_v1_5e4_20.pth"), # Use your actual filename
         "arch_type": "resnet",
         "n_value": 3,
         "loss_type": "cross_entropy"
     },
     {
         "name": "ResNet-56",
-        "ckpt_path": os.path.join(CHECKPOINT_DIR, "resnet_neo_v1_5e4_56.pth"), # Use your actual filename
+        "ckpt_path": os.path.join("resnet_neo_v2_5e4_56.pth"), # Use your actual filename
         "arch_type": "resnet",
         "n_value": 9,
         "loss_type": "cross_entropy"
     },
     {
         "name": "ResNet-110",
-        "ckpt_path": os.path.join(CHECKPOINT_DIR, "resnet_neo_v1_5e4_110.pth"), # Use your actual filename
+        "ckpt_path": os.path.join("resnet_neo_v3_5e4_110.pth"), # Use your actual filename
         "arch_type": "resnet",
         "n_value": 18,
         "loss_type": "cross_entropy"
     },
-    {
-        "name": "PlainNet-20",
-        "ckpt_path": os.path.join(CHECKPOINT_DIR, "plainnet_neo_v1_5e4_20.pth"), # Use your actual filename
-        "arch_type": "plainnet",
-        "n_value": 3,
-        "loss_type": "cross_entropy"
-    },
+    # {
+    #     "name": "PlainNet-20",
+    #     "ckpt_path": os.path.join("plainnet_neo_v1_5e4_20.pth"), # Use your actual filename
+    #     "arch_type": "plainnet",
+    #     "n_value": 3,
+    #     "loss_type": "cross_entropy"
+    # },
     {
         "name": "PlainNet-56",
-        "ckpt_path": os.path.join(CHECKPOINT_DIR, "plainnet_neo_v1_5e4_56.pth"), # Use your actual filename
+        "ckpt_path": os.path.join("plainnet_neo_v2_5e4_56.pth"), # Use your actual filename
         "arch_type": "plainnet",
         "n_value": 9,
         "loss_type": "cross_entropy"
     },
     {
         "name": "PlainNet-110",
-        "ckpt_path": os.path.join(CHECKPOINT_DIR, "plainnet_neo_v1_5e4_110.pth"), # Use your actual filename
+        "ckpt_path": os.path.join("plainnet_neo_v3_5e4_110.pth"), # Use your actual filename
         "arch_type": "plainnet",
         "n_value": 18,
         "loss_type": "cross_entropy"
@@ -95,7 +95,10 @@ models_to_visualize = [
 # --- Helper Functions ---
 
 def get_model_parameters(model):
-    """Extract parameters as a list of tensors."""
+
+
+    # print(model)
+    # print(model.parameters())
     params = []
     for param in model.parameters():
         # Detach and clone to avoid modifying original model's computation graph
@@ -104,10 +107,14 @@ def get_model_parameters(model):
     return params
 
 def set_model_parameters(model, params_list):
-    """Load parameters from a list of tensors into a model."""
-    with torch.no_grad(): # Ensure no gradient tracking
+    # print("model")
+    # print(model)
+    # print("params_list")
+    # print(params_list)
+
+    with torch.no_grad(): 
         for model_param, new_param in zip(model.parameters(), params_list):
-            model_param.data.copy_(new_param.data) # Use copy_ to modify in-place
+            model_param.data.copy_(new_param.data) 
 
 def get_random_directions(params_list):
     """Generate two random direction vectors matching the structure of params_list."""
@@ -128,14 +135,14 @@ def get_random_directions(params_list):
     return direction1, direction2
 
 def normalize_direction_filterwise(direction, weights):
-    """
-    Apply filter-wise normalization to a direction vector based on weights.
-    Handles Conv2d and Linear layers. Skips biases and BN params.
-    """
-    normalized_direction = []
-    assert len(direction) == len(weights), "Direction and weights must have same length"
+    # Applyin filter-wise normalization 
 
-    print("Normalizing direction filter-wise...")
+    normalized_direction = []
+    if len(direction) != len(weights):
+        print("Error: Direction and weights must have the same length.")
+        return None
+
+    print("Normalizing direction filter-wise")
     processed_params = 0
     for d, w in zip(direction, weights):
         # Check if it's a learnable weight tensor (usually 2D for Linear, 4D for Conv2d)
@@ -197,32 +204,32 @@ def get_loss(model, criterion, loader, device, subset_size=None):
         # for data, target in tqdm(loader, desc=" Eval", leave=False): # tqdm inside loop can be noisy
         while processed_batches < num_batches_to_process:
             try:
-                data, target = next(data_iter)
-                data, target = data.to(device), target.to(device)
-                output = model(data)
-                loss = criterion(output, target)
-                total_loss += loss.item() * data.size(0)
-                total_samples += data.size(0)
-                processed_batches += 1
+                data,target = next(data_iter)
+                data,target = data.to(device), target.to(device)
+                output=model(data)
+                loss=criterion(output,target)
+                total_loss+= loss.item()*data.size(0)
+                total_samples+=data.size(0)
+                processed_batches+=1
             except StopIteration:
                 break # Reached end of loader
 
     if total_samples == 0:
         return float('inf') # Avoid division by zero
 
-    return total_loss / total_samples
+    return total_loss/total_samples
 
 # --- Main Visualization Logic ---
 def visualize_all_models():
     # Ensure plot directory exists
-    os.makedirs(PLOT_DIR, exist_ok=True)
+    os.makedirs(PLOT_DIR,exist_ok=True)
 
     # --- Load Data Once ---
     # Use the test transform for evaluating loss during visualization
-    print("Loading evaluation data...")
+    print("Loading evaluation data")
     eval_transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+        transforms.Normalize((0.4914,0.4822,0.4465), (0.2023,0.1994,0.2010))
     ])
     # Use the original get_data or load manually - needs only test set here
     _, eval_loader = get_data(
@@ -234,34 +241,43 @@ def visualize_all_models():
 
 
     for model_config in models_to_visualize:
-        model_name = model_config["name"]
-        ckpt_path = model_config["ckpt_path"]
-        arch_type = model_config["arch_type"]
-        n_value = model_config["n_value"]
-        loss_type = model_config["loss_type"]
+        model_name=model_config["name"]
+        ckpt_path=model_config["ckpt_path"]
+        arch_type=model_config["arch_type"]
+        n_value=model_config["n_value"]
+        loss_type=model_config["loss_type"]
 
-        print(f"\n\n=== Processing Model: {model_name} ===")
-        print(f"Checkpoint: {ckpt_path}")
+        print(f"\n\nProcessing hte Model: {model_name} ")
+        print(f"Checkpoint:{ckpt_path}")
 
         if not os.path.exists(ckpt_path):
-            print(f"!!! Checkpoint file not found: {ckpt_path}. Skipping model.")
+            print(f"!!! Oh no Checkpoint file not found: {ckpt_path}. Skipping model.")
+            continue
+        
+        # was running into issues with the plot error when os not exist 
+        # so wanna rerun and create plots of already created ones
+        plot3d_save_path = os.path.join(PLOT_DIR, f"{model_name}_3D_landscape_{RESOLUTION}x{RESOLUTION}.png")
+        plot2d_save_path = os.path.join(PLOT_DIR, f"{model_name}_2D_contour_{RESOLUTION}x{RESOLUTION}.png")
+        if os.path.exists(plot3d_save_path) and os.path.exists(plot2d_save_path):
+            print(f"Plots already exist for {model_name} at {RESOLUTION}x{RESOLUTION} resolution. Skipping.")
             continue
 
-        # --- 1. Load Model Architecture ---
-        print("Instantiating model architecture...")
-        if arch_type == "net":
-            model = Net(num_classes=10)
+
+        # loads the model architecture based on the type
+        print("Instantiating the model ")
+        if arch_type=="net":
+            model=Net(num_classes=10)
             # Ensure model forward pass matches loss_type
             # This assumes you saved the *correct* model variant for base_cnn_best.pth
-        elif arch_type == "resnet":
-            model = ResNet(n=n_value)
-        elif arch_type == "plainnet":
-            model = PlainNet(n=n_value)
+        elif arch_type=="resnet":
+            model=ResNet(n=n_value)
+        elif arch_type=="plainnet":
+            model=PlainNet(n=n_value)
         else:
             print(f"!!! Unknown architecture type '{arch_type}'. Skipping.")
             continue
 
-        # --- 2. Load Trained Weights ---
+
         print("Loading trained weights...")
         try:
             # Adjust loading based on how checkpoints were saved
@@ -270,10 +286,10 @@ def visualize_all_models():
             # Handle potential keys like 'state' if saved from techxzen repo run.py
             if 'state' in state_dict and isinstance(state_dict['state'], dict):
                  model.load_state_dict(state_dict['state'])
-                 print(" Loaded state_dict from 'state' key.")
+                 print(" Loaded  state_dict from 'state' key.")
             else:
                  model.load_state_dict(state_dict)
-                 print(" Loaded state_dict directly.")
+                 print(" Loaded  state_dict directly.")
 
             model.to(DEVICE) # Move model to GPU *after* loading state_dict
         except Exception as e:
@@ -285,7 +301,7 @@ def visualize_all_models():
         # print(" Theta_star shapes:", [p.shape for p in theta_star])
 
         # --- 4. Get Random Directions (delta, eta) ---
-        delta, eta = get_random_directions(theta_star)
+        delta,eta=get_random_directions(theta_star)
         # print(" Delta shapes:", [p.shape for p in delta])
         # print(" Eta shapes:", [p.shape for p in eta])
 
@@ -380,13 +396,16 @@ def visualize_all_models():
         fig2d, ax2d = plt.subplots(figsize=(8, 7))
         # Adjust levels for contour plot - maybe log scale helps here too
         # Often need to experiment with contour levels
-        levels = np.linspace(np.min(loss_surface), np.min(loss_surface) + 1.0, 15) # Example levels: min loss to min loss + 1
+        # levels = np.linspace(np.min(loss_surface), np.min(loss_surface) + 1.0, 15) # Example levels: min loss to min loss + 1
         # Or logarithmic levels: levels = np.logspace(np.log10(np.min(loss_surface)+1e-6), np.log10(np.max(loss_surface)), 15)
-        CS = ax2d.contourf(X, Y, loss_surface.T, levels=levels, cmap='viridis', extend='max') # Filled contour, transpose Z
-        # ax2d.contour(X, Y, loss_surface.T, levels=levels, colors='k', linewidths=0.5) # Add contour lines
+        # CS=ax2d.contourf(X, Y, loss_surface.T, levels=levels, cmap='viridis', extend='max') # Filled contour, transpose Z
+        n_levels=20
+        # CS=ax2d.contour(X, Y, loss_surface.T, levels=n_levels, cmap='viridis', linewidths=0.5) # Add contour lines
+        CS=ax2d.contour(X, Y, np.log(loss_surface+1e-6).T, levels=n_levels, cmap='viridis', linewidths=0.5) # Add contour lines
         ax2d.set_xlabel('Alpha')
         ax2d.set_ylabel('Beta')
         ax2d.set_title(f"Loss Contours: {model_name}")
+        ax2d.clabel(CS, inline=True, fontsize=8, fmt='%.2f')
         fig2d.colorbar(CS)
         plot2d_save_path = os.path.join(PLOT_DIR, f"{model_name}_2D_contour_{RESOLUTION}x{RESOLUTION}.png")
         plt.savefig(plot2d_save_path)
@@ -401,5 +420,26 @@ def visualize_all_models():
     print("\n\n=== All Model Visualizations Finished ===")
 
 
+
+# CHECK ALL FILES EXIST!!!!
+def pre_check():
+    print("Performing pre-checks...")
+
+    # Check if required model checkpoint files exist
+    for model_config in models_to_visualize:
+        ckpt_path = model_config["ckpt_path"]
+        if not ckpt_path.endswith('.pth'):
+            print(f"!!! Invalid checkpoint file format: {ckpt_path}. Expected a .pth file.")
+            return False
+        if not os.path.exists(ckpt_path):
+            print(f"!!! Required checkpoint file not found: {ckpt_path}. Please ensure it exists.")
+            return False
+
+    print("All pre-checks passed.")
+    return True
+
 if __name__ == '__main__':
+    if not pre_check():
+        print("Pre-checks failed. Exiting.")
+        exit(1)
     visualize_all_models()

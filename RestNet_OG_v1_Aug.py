@@ -5,7 +5,7 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import MultiStepLR # Or StepLR, CosineAnnealingLR
 from torchvision import transforms, datasets
 from torch.utils.data import DataLoader
-from common.utils import get_data 
+from common.utils import get_data, save_training_plot
 # --- Import from your project structure ---
 from common.utils import get_device # Assuming get_device is in utils
 from common.train_utils import train, evaluate # Use your modified train/evaluate
@@ -87,7 +87,7 @@ def run_resnet_experiment(n_value: int, depth: int):
 
     # --- Train the model ---
     # Ensure your train function uses the loss_type parameter
-    train(model,
+    training_plot=train(model,
           train_loader=train_loader,
           optimizer=optimizer,
           epochs=config["epochs"],
@@ -109,6 +109,11 @@ def run_resnet_experiment(n_value: int, depth: int):
     print(f"Saving model to {config['save_name']}...")
     torch.save(model.state_dict(), config['save_name'])
     print(f"ResNet-{depth} model saved.")
+        # save trainin plot
+    save_path = config['save_name'].replace(".pth", "_history.npz")
+    save_training_plot(save_path,training_plot)
+
+    
 
 
 if __name__ == '__main__':
