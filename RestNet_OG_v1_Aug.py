@@ -21,7 +21,7 @@ def run_resnet_experiment(n_value: int, depth: int):
         "depth": depth,
         "lr": 0.1,
         "epochs": 169,
-        "batch_size": 128, # Recommended if memory allows, else 64
+        "batch_size": 64, # Recommended if memory allows, else 64
         "optimizer": "SGD",
         "momentum": 0.9,
         "weight_decay": 5e-4,

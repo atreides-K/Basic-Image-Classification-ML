@@ -85,7 +85,7 @@ def run_resnet_experiment(n_value: int, depth: int):
 
     # --- Train the model ---
     # Ensure your train function uses the loss_type parameter
-    train(model,
+    training_plot=train(model,
           train_loader=train_loader,
           optimizer=optimizer,
           epochs=config["epochs"],
@@ -107,6 +107,10 @@ def run_resnet_experiment(n_value: int, depth: int):
     print(f"Saving model to {config['save_name']}...")
     torch.save(model.state_dict(), config['save_name'])
     print(f"ResNet-{depth} model saved.")
+
+    # save trainin plot
+    save_path = config['save_name'].replace(".pth", "_history.npz")
+    save_training_plot(save_path,training_plot)
 
 
 if __name__ == '__main__':

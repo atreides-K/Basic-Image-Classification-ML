@@ -7,7 +7,7 @@ from torchvision import transforms, datasets
 from torch.utils.data import DataLoader
 from common.utils import get_data 
 # --- Import from your project structure ---
-from common.utils import get_device
+from common.utils import get_device, save_training_plot  
 from common.train_utils import train, evaluate 
 # --- Import the ResNet model ---
 from models import PlainNet 
@@ -107,6 +107,10 @@ def run_plainnet_experiment(n_value: int, depth: int):
     print(f"Saving model to {config['save_name']}...")
     torch.save(model.state_dict(), config['save_name'])
     print(f"plainNet-{depth} model saved.")
+
+        # save trainin plot
+    save_path = config['save_name'].replace(".pth", "_history.npz")
+    save_training_plot(save_path,training_plot)
 
 
 if __name__ == '__main__':
