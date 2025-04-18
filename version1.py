@@ -46,16 +46,17 @@ class Net(nn.Module):
 # --- Main execution function for the experiment ---
 def main() -> None:
     # --- Experiment Configuration ---
+    epoch=150
     config = {
         "lr": 0.1,
-        "epochs": 150,
+        "epochs": epoch,
         "batch_size": 64,
         "optimizer": "SGD",
         "scheduler": "MultiStepLR",
         "step_size": 20,
         "gamma": 0.1,
         "loss_type": "nll",
-        "save_name": 'base_cnn_exp0.8_sgd_lr01_e120_multystepLR_NLL.pth' # Your descriptive name
+        "save_name": f'base_cnn_exp0.8_sgd_lr01_e{epoch}_multystepLR_NLL.pth' # Your descriptive name
     }
     print("Running Experiment with Config:")
     print(config)

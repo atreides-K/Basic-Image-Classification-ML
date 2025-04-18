@@ -81,7 +81,7 @@ models_to_evaluate_config = [
     # Index 6
     {
         "name": "PlainNet-110",
-        "ckpt_path": os.path.join(CHECKPOINT_DIR, "plainnet_neo_v3_5e4_110_2.pth"), # VERIFY FILENAME (_2?)
+        "ckpt_path": os.path.join(CHECKPOINT_DIR, "plainnet_neo_v3_5e4_110.pth"), # VERIFY FILENAME (_2?)
         "arch_type": "plainnet", "n_value": 18, "loss_type": "cross_entropy"
     },
 ]

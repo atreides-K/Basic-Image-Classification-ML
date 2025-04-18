@@ -68,6 +68,12 @@ OG modified the train util to handle separete train and test load transform
 techxzen augmentations 
 
 Neo kuangliu pytorch-cifar
+--- Evaluation Results ---
+Model:           ResNet-20
+Checkpoint:      ./resnet_neo_v1_5e4_20.pth
+Test Loss:       0.2871
+Test Accuracy:   0.9210%
+
 Testing: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 79/79 [00:04<00:00, 15.82it/s, loss=0.7735]
   Final Test Loss: 0.2705 | Final Test Acc: 0.9344
 Saving model to resnet_neo_v2_5e4_56.pth...
@@ -80,6 +86,42 @@ Saving model to resnet_neo_v3_5e4_110.pth...
 ResNet-110 model saved.
 
 
+
+
+
+
+PLAIN NET
+
+  Final Evaluation for plainNet-20:
+Testing: 100%|████████████████████████████████████████████████████████████████████████████████████████████| 79/79 [00:03<00:00, 25.26it/s, loss=0.5126]
+  Final Test Loss: 0.3593 | Final Test Acc: 0.9017
+Saving model to plainnet_neo_v1_5e4_20.pth...
+
+
 Final Evaluation for plainNet-56:
 Testing: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 79/79 [00:05<00:00, 13.41it/s, loss=0.8131]
   Final Test Loss: 0.4567 | Final Test Acc: 0.8602
+--- Evaluation Results ---
+Model:           PlainNet-56
+Checkpoint:      ./plainnet_neo_v2_5e4_56.pth
+Test Loss:       0.4567
+Test Accuracy:   0.8602%
+--------------------------
+
+
+
+Epoch 169/169 Summary | LR: 0.001000
+  Train Loss: 2.3026 | Train Acc: 0.0957
+Testing: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 79/79 [00:12<00:00,  6.57it/s, loss=2.3024]
+  Test Loss:  2.3026 | Test Acc:  0.1000
+
+Training complete!
+
+Final Evaluation for plainNet-110:
+Testing: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 79/79 [00:13<00:00,  5.68it/s, loss=2.3024]
+  Final Test Loss: 2.3026 | Final Test Acc: 0.1000
+Saving model to plainnet_neo_v3_5e4_110_2.pth...
+plainNet-110 model saved.
+History saved using NumPy.
+
+All plainNet experiments finished.
